@@ -24,7 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.junit.Test;
-import org.springframework.integration.x.ip.serializer.AbstractHttpSwitchingDeserializer.BasicState;
+import org.springframework.integration.x.ip.http.AbstractHttpSwitchingDeserializer;
+import org.springframework.integration.x.ip.http.AbstractHttpSwitchingDeserializer.BasicState;
 
 /**
  * @author Gary Russell

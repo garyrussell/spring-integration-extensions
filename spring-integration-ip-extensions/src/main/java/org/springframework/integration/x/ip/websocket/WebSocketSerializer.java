@@ -31,7 +31,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.springframework.core.serializer.Serializer;
 import org.springframework.integration.MessagingException;
 import org.springframework.integration.ip.tcp.serializer.SoftEndOfStreamException;
-import org.springframework.integration.x.ip.serializer.AbstractHttpSwitchingDeserializer;
+import org.springframework.integration.x.ip.http.AbstractHttpSwitchingDeserializer;
 import org.springframework.integration.x.ip.serializer.DataFrame;
 import org.springframework.util.Assert;
 
@@ -48,7 +48,7 @@ public class WebSocketSerializer extends AbstractHttpSwitchingDeserializer imple
 	private static final Set<Short> INVALID_STATUS = new HashSet<Short>(
 		Arrays.asList((short) 1004, (short) 1005, (short) 1006, (short) 1012, (short) 1013, (short) 1014, (short) 1015));
 
-	private volatile boolean server;
+	private volatile boolean server = true;
 
 	private boolean validateUtf8;
 

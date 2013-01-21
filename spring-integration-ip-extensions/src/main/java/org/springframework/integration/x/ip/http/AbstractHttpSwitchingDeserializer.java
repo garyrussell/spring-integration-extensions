@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.integration.x.ip.serializer;
+package org.springframework.integration.x.ip.http;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +26,9 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.integration.x.ip.serializer.ByteArrayCrLfSerializer;
+import org.springframework.integration.x.ip.serializer.DataFrame;
+import org.springframework.integration.x.ip.serializer.StatefulDeserializer;
 
 /**
  * Base class for (de)Serializers that start with an HTTP-like protocol then

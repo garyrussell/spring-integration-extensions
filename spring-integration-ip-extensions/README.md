@@ -65,3 +65,12 @@ Sending 'start' begins sending an incrementing # once per second. 'stop' stops t
 The [bitcoin-rt project](https://github.com/cbeams/bitcoin-rt) provides a sample using the Spring Integration IP extensions:
  
 [https://github.com/cbeams/bitcoin-rt/tree/master/java-spring-integration](https://github.com/cbeams/bitcoin-rt/tree/master/java-spring-integration)
+
+
+# Updates:
+
+Added event for connection handshake - ws.html now 'starts' automatically
+
+Added SockJS (over WebSockets ONLY) - see SimpleSockJSServerTests and sockjs.html
+
+Added first cut simple HTTP server - needs 3.0.0.M1 for more sophistication - see SimpleHttpServerTests

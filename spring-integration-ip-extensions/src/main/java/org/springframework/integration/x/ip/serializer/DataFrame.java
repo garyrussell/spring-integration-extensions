@@ -15,6 +15,8 @@
  */
 package org.springframework.integration.x.ip.serializer;
 
+import org.springframework.http.HttpHeaders;
+
 /**
  * @author Gary Russell
  * @since 3.0
@@ -35,6 +37,8 @@ public class DataFrame {
 	protected final String payload;
 
 	protected final byte[] binary;
+
+	private volatile HttpHeaders httpHeaders;
 
 	public DataFrame(int type, String payload) {
 		this(type, payload, null);
@@ -60,6 +64,14 @@ public class DataFrame {
 
 	public byte[] getBinary() {
 		return binary;
+	}
+
+	public HttpHeaders getHttpHeaders() {
+		return httpHeaders;
+	}
+
+	public void setHttpHeaders(HttpHeaders httpHeaders) {
+		this.httpHeaders = httpHeaders;
 	}
 
 }

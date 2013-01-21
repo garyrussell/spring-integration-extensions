@@ -58,6 +58,7 @@ configurations {
 
 dependencies {
 	compile "org.springframework.integration:spring-integration-ip:$springIntegrationVersion"
+	compile "org.springframework.integration:spring-integration-http:$springIntegrationVersion"
 	compile "commons-codec:commons-codec:1.5"
 	testCompile "org.springframework.integration:spring-integration-test:$springIntegrationVersion"
 	testCompile "junit:junit-dep:$junitVersion"
