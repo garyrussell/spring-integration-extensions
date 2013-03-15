@@ -90,6 +90,9 @@ public class WebSocketSerializer extends AbstractHttpSwitchingDeserializer imple
 			data = (String) frame;
 			theFrame = new WebSocketFrame(WebSocketFrame.TYPE_DATA, data);
 		}
+		else if (frame instanceof byte[]) {
+			theFrame = new WebSocketFrame(WebSocketFrame.TYPE_DATA_BINARY, (byte[]) frame);
+		}
 		else if (frame instanceof WebSocketFrame) {
 			theFrame = (WebSocketFrame) frame;
 			data = theFrame.getPayload();

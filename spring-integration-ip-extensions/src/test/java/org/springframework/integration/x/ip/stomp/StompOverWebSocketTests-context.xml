@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-ip="http://www.springframework.org/schema/integration/ip"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-3.0.xsd
+		http://www.springframework.org/schema/integration/ip http://www.springframework.org/schema/integration/ip/spring-integration-ip-3.0.xsd">
+
+	<int-ip:tcp-connection-factory id="stompServer"
+		type="server"
+		port="19876"
+		interceptor-factory-chain="interceptors"
+		serializer="wsSerializer"
+		deserializer="wsSerializer"
+		mapper="mapper" />
+
+	<bean id="mapper" class="org.springframework.integration.x.ip.websocket.WebSocketMessageMapper">
+		<constructor-arg ref="webSocketInterceptorFactory"/>
+	</bean>
+
+	<bean id="wsSerializer" class="org.springframework.integration.x.ip.websocket.WebSocketSerializer">
+		<property name="server" value="true" />
+	</bean>
+
+	<bean id="interceptors" class="org.springframework.integration.ip.tcp.connection.TcpConnectionInterceptorFactoryChain">
+		<property name="interceptors" ref="webSocketInterceptorFactory" />
+	</bean>
+
+	<bean id="webSocketInterceptorFactory"
+		class="org.springframework.integration.x.ip.websocket.WebSocketTcpConnectionInterceptorFactory" />
+
+	<int-ip:tcp-inbound-channel-adapter
+		connection-factory="stompServer"
+		channel="toStomp" />
+
+	<int:chain input-channel="toStomp" output-channel="stompToBytesChannel">
+		<int:transformer expression="payload.payload" />
+		<int:transformer method="toStompMessage">
+			<bean class="org.springframework.stomp.StompMessageConverter" />
+		</int:transformer>
+		<int:service-activator expression="@stompHandler.handleStompMessage(payload, headers.ip_connectionId)" />
+	</int:chain>
+
+	<bean id="stompHandler" class="org.springframework.stomp.DefaultStompHandler" />
+
+	<bean class="org.springframework.integration.x.ip.stomp.TestStompSubscriptionMessageProducer">
+		<constructor-arg value="fooDest" />
+		<constructor-arg ref="stompHandler" />
+		<constructor-arg value="2000" />
+		<property name="outputChannel" ref="stompToBytesChannel" />
+	</bean>
+
+	<int:channel id="stompToBytesChannel" />
+
+	<int:transformer input-channel="stompToBytesChannel" output-channel="stompOutChannel" method="fromStompMessage">
+		<bean class="org.springframework.stomp.StompMessageConverter" />
+	</int:transformer>
+
+	<int:channel id="stompOutChannel" />
+
+	<int-ip:tcp-outbound-channel-adapter
+		channel="stompOutChannel"
+		connection-factory="stompServer" />
+</beans>

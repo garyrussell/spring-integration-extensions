@@ -1,0 +1,70 @@
+<!--
+/*
+ * Copyright 2002-2013 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ -->
+ <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+		"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Spring Integration Stomp Over Web Socket Test</title>
+	<script src="https://raw.github.com/jmesnil/stomp-websocket/master/dist/stomp.js"></script>
+</head>
+
+<body>
+<script type="text/javascript">
+	var client;
+
+	fooDestOnMessage = function(message) {
+	    // called when the client receives a STOMP message from the server
+	    if (message.body) {
+			document.getElementById("received").value += (message.body + '\n')
+			document.getElementById("received").scrollTop = document.getElementById("received").scrollHeight
+	    } else {
+	      alert("got empty message");
+	    }
+	 }		
+
+	connect_callback = function() {
+		document.getElementById("received").value = 'Connected\n'
+		client.subscribe("fooDest", fooDestOnMessage);
+	}
+
+	if (window.WebSocket) {
+		client = Stomp.client("ws://localhost:19876/stomp");
+		client.connect('', '', connect_callback);
+	} else {
+		alert("Your browser does not support Websockets. (Use Chrome)");
+	}
+
+	function doClose(message) {
+		if (client) {
+			client.disconnect(function() {
+				document.getElementById("received").value += 'Disconnected\n'
+				document.getElementById("received").scrollTop = document.getElementById("received").scrollHeight				
+			})
+		}
+	}
+</script>
+<center>
+	<textarea rows="20" cols="50" id="received" readonly="readonly"></textarea>
+	<br/>
+	<form>
+		<input type="button" value="Close" onclick="doClose()" align="center"/>
+	</form>
+</center>
+</body>
+</html>
