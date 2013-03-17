@@ -15,6 +15,7 @@
  */
 package org.springframework.stomp;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -36,7 +37,7 @@ public class StompMessage {
 	}
 
 	public Map<String, String> getHeaders() {
-		return headers;
+		return Collections.unmodifiableMap(this.headers);
 	}
 
 	public byte[] getPayload() {

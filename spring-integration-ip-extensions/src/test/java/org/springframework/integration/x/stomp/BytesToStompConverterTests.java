@@ -51,4 +51,26 @@ public class BytesToStompConverterTests {
 		assertTrue(convertedBack.contains(host));
 	}
 
+	@Test
+	public void testConnectWithEscapes() throws Exception {
+		StompMessageConverter converter = new StompMessageConverter();
+		String accept = "accept-version:1.1\n";
+		String host = "ho\\c\\nst:st\\nomp.gi\\cthu\\b.org\n";
+		String test = "\n\n\nCONNECT\n" + // test skipping of leading \n from previous msg
+				accept +
+				host +
+				"\n";
+		StompMessage message = converter.toStompMessage(test.getBytes("UTF-8"));
+		assertEquals(3, message.getHeaders().size());
+		assertEquals("CONNECT", message.getHeaders().get(StompMessage.COMMAND_KEY));
+		assertEquals("1.1", message.getHeaders().get("accept-version"));
+		assertEquals("st\nomp.gi:thu\\b.org", message.getHeaders().get("ho:\nst"));
+		assertEquals(0, message.getPayload().length);
+
+		String convertedBack = new String(converter.fromStompMessage(message), "UTF-8");
+		assertEquals(test.substring(3).length(), convertedBack.length());
+		assertTrue(convertedBack.contains(accept));
+		assertTrue(convertedBack.contains(host));
+	}
+
 }

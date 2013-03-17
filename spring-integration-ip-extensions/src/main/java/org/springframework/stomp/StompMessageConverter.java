@@ -94,9 +94,12 @@ public class StompMessageConverter {
 				String key = entry.getKey();
 				if (!StompMessage.COMMAND_KEY.equals(key)) {
 					// TODO: escapes
+					key = key.replaceAll("\\\\", "\\\\").replaceAll(":", "\\\\c").replaceAll("\n", "\\\\n");
 					outputStream.write(key.getBytes("UTF-8"));
 					outputStream.write(COLON);
-					outputStream.write(entry.getValue().getBytes("UTF-8"));
+					String value = entry.getValue();
+					value = value.replaceAll("\\\\", "\\\\").replaceAll(":", "\\\\c").replaceAll("\n", "\\\\n");
+					outputStream.write(value.getBytes("UTF-8"));
 					outputStream.write(LF);
 				}
 			}
@@ -164,9 +167,9 @@ public class StompMessageConverter {
 			if (escapeAt >= 0 && escapeAt < delimAt) {
 				char escaped = this.content.charAt(escapeAt + 1);
 				if (escaped == 'n' || escaped == 'c' || escaped == '\\') {
-					token = token.replaceAll("\\n", "\n")
-							.replaceAll("\\c", ":")
-							.replaceAll("\\\\", "\\");
+					token = token.replaceAll("\\\\n", "\n")
+							.replaceAll("\\\\c", ":")
+							.replaceAll("\\\\\\\\", "\\\\");
 				}
 				else {
 					throw new StompException("Invalid escape sequence \\" + escaped);
