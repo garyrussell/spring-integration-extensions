@@ -32,6 +32,8 @@ public class DefaultStompHandler implements StompHandler {
 
 	private final Map<String, StompSubscriptionCallback> services = new HashMap<String, StompSubscriptionCallback>();
 
+	private final Map<Object, Map<String, String>> subscriptionToDestination = new HashMap<Object, Map<String,String>>();
+
 	@Override
 	public StompMessage handleStompMessage(StompMessage requestMessage, Object session) {
 		String command = requestMessage.getHeaders().get(StompMessage.COMMAND_KEY);
@@ -73,9 +75,16 @@ public class DefaultStompHandler implements StompHandler {
 			StompSubscriptionCallback callback = getService(subscribeMessage);
 			String id = getId(subscribeMessage);
 			callback.subscribed(session, id);
+			Map<String, String> subs = this.subscriptionToDestination.get(session);
+			if (subs == null) {
+				subs = new HashMap<String, String>();
+				this.subscriptionToDestination.put(session, subs);
+			}
+			subs.put(id, subscribeMessage.getHeaders().get("destination"));
 			return null;
 		}
 		catch (Exception e) {
+			e.printStackTrace();
 			// TODO: return an ERROR message
 			return null;
 		}
@@ -84,12 +93,16 @@ public class DefaultStompHandler implements StompHandler {
 	protected StompMessage unsubscribe(StompMessage unsubscribeMessage, Object session) {
 		// TODO: ensure connected
 		try {
-			StompSubscriptionCallback callback = getService(unsubscribeMessage);
 			String id = getId(unsubscribeMessage);
+			Assert.notNull(id, "No id header found");
+			String destination = this.subscriptionToDestination.get(session).remove(id);
+			Assert.notNull(destination, "No subscription found");
+			StompSubscriptionCallback callback = this.services.get(destination);
 			callback.unsubscribed(session, id);
 			return null;
 		}
 		catch (Exception e) {
+			e.printStackTrace();
 			// TODO: return an ERROR message
 			return null;
 		}
@@ -99,6 +112,7 @@ public class DefaultStompHandler implements StompHandler {
 		for (Entry<String, StompSubscriptionCallback> entry : this.services.entrySet()) {
 			entry.getValue().unsubscribed(session, null);
 		}
+		this.subscriptionToDestination.remove(session);
 		// TODO: RECEIPT
 		return null;
 	}

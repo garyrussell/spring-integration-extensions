@@ -27,20 +27,48 @@
 <body>
 <script type="text/javascript">
 	var client;
+	var sub1;
+	var sub2;
 
-	fooDestOnMessage = function(message) {
+	function doSub1(message) {
+		if (client) {
+			sub1 = client.subscribe("fooDest", fooDestOnMessage1);
+			addMessage(document.getElementById("received1"), 'Subscribed');
+			document.getElementById("sub1").disabled = true
+			document.getElementById("unsub1").disabled = false
+		}
+	}
+
+	function doSub2(message) {
+		if (client) {
+			sub2 = client.subscribe("fooDest", fooDestOnMessage2);
+			addMessage(document.getElementById("received2"), 'Subscribed');
+			document.getElementById("sub2").disabled = true
+			document.getElementById("unsub2").disabled = false
+		}
+	}
+	fooDestOnMessage = function(message, textArea) {
 	    // called when the client receives a STOMP message from the server
 	    if (message.body) {
-			document.getElementById("received").value += (message.body + '\n')
-			document.getElementById("received").scrollTop = document.getElementById("received").scrollHeight
+	    	addMessage(textArea, message.body)
 	    } else {
 	      alert("got empty message");
 	    }
 	 }		
 
+	fooDestOnMessage1 = function(message) {
+		fooDestOnMessage(message, document.getElementById("received1"));
+	}
+
+	fooDestOnMessage2 = function(message) {
+		fooDestOnMessage(message, document.getElementById("received2"));
+	}
+
 	connect_callback = function() {
-		document.getElementById("received").value = 'Connected\n'
-		client.subscribe("fooDest", fooDestOnMessage);
+		addMessage(document.getElementById("received1"), 'Connected')
+		addMessage(document.getElementById("received2"), 'Connected')
+		doSub1()
+		doSub2()
 	}
 
 	if (window.WebSocket) {
@@ -50,20 +78,52 @@
 		alert("Your browser does not support Websockets. (Use Chrome)");
 	}
 
+	function addMessage(textArea, message) {
+		textArea.value += message + '\n'
+		textArea.scrollTop = textArea.scrollHeight				
+	}
+
 	function doClose(message) {
 		if (client) {
 			client.disconnect(function() {
-				document.getElementById("received").value += 'Disconnected\n'
-				document.getElementById("received").scrollTop = document.getElementById("received").scrollHeight				
+				addMessage(document.getElementById("received1"), 'Disconnected');
+				addMessage(document.getElementById("received2"), 'Disconnected');
+				document.getElementById("unsub1").disabled = true
+				document.getElementById("unsub2").disabled = true
+				document.getElementById("sub1").disabled = true
+				document.getElementById("sub2").disabled = true
 			})
+		}
+	}
+	
+	function doUnsub1(message) {
+		if (client) {
+			client.unsubscribe(sub1)
+			addMessage(document.getElementById("received1"), 'Unsubscribed');
+			document.getElementById("sub1").disabled = false
+			document.getElementById("unsub1").disabled = true
+		}
+	}
+
+	function doUnsub2(message) {
+		if (client) {
+			client.unsubscribe(sub2)
+			addMessage(document.getElementById("received2"), 'Unsubscribed');
+			document.getElementById("sub2").disabled = false
+			document.getElementById("unsub2").disabled = true
 		}
 	}
 </script>
 <center>
-	<textarea rows="20" cols="50" id="received" readonly="readonly"></textarea>
+	<textarea rows="20" cols="50" id="received1" readonly="readonly"></textarea>
+	<textarea rows="20" cols="50" id="received2" readonly="readonly"></textarea>
 	<br/>
 	<form>
+		<input id="unsub1" type="button" value="Unsubscribe1" onclick="doUnsub1()" align="center"/>
+		<input id="sub1" type="button" value="Subscribe1" onclick="doSub1()" align="center"/>
 		<input type="button" value="Close" onclick="doClose()" align="center"/>
+		<input  id="unsub2"type="button" value="Unsubscribe2" onclick="doUnsub2()" align="center"/>
+		<input id="sub2" type="button" value="Subscribe2" onclick="doSub2()" align="center"/>
 	</form>
 </center>
 </body>

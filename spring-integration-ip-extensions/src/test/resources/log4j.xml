@@ -20,7 +20,7 @@
 	</logger>
 
 	<logger name="org.springframework.integration.x">
-		<level value="info" />
+		<level value="debug" />
 	</logger>
 
 	<logger name="org.springframework.integration.endpoint.SourcePollingChannelAdapter">

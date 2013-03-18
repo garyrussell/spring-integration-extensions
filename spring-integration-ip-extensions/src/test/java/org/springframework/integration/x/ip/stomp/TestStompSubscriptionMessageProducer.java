@@ -42,24 +42,28 @@ public class TestStompSubscriptionMessageProducer extends StompSubscriptionMessa
 	final Runnable runner = new Runnable() {
 		@Override
 		public void run() {
-			int thisMessageNumber = ++messageNumber;
-			for (Entry<String, Set<String>> entry : getSubscriptions().entrySet()) {
-				String connectionId = entry.getKey();
-				for (String id : entry.getValue()) {
-					Map<String, String> headers = new HashMap<String, String>();
-					headers.put(StompMessage.COMMAND_KEY, "MESSAGE");
-					headers.put("subscription", id);
-					headers.put("message-id", Integer.toString(thisMessageNumber));
-					headers.put("destination", getDestination());
-					headers.put("content-type", "text/plain");
-					byte[] payload = "Hello, world!".getBytes();
-					StompMessage stompMessage = new StompMessage(headers, payload);
-					sendMessage(MessageBuilder.withPayload(stompMessage)
-							.setHeader(IpHeaders.CONNECTION_ID, connectionId)
-							.build());
+			try {
+				int thisMessageNumber = ++messageNumber;
+				for (Entry<String, Set<String>> entry : getSubscriptions().entrySet()) {
+					String connectionId = entry.getKey();
+					for (String id : entry.getValue()) {
+						Map<String, String> headers = new HashMap<String, String>();
+						headers.put(StompMessage.COMMAND_KEY, "MESSAGE");
+						headers.put("subscription", id);
+						headers.put("message-id", Integer.toString(thisMessageNumber));
+						headers.put("destination", getDestination());
+						headers.put("content-type", "text/plain");
+						byte[] payload = "Hello, world!".getBytes();
+						StompMessage stompMessage = new StompMessage(headers, payload);
+						sendMessage(MessageBuilder.withPayload(stompMessage)
+								.setHeader(IpHeaders.CONNECTION_ID, connectionId)
+								.build());
+					}
 				}
 			}
-			schedule();
+			finally {
+				schedule();
+			}
 		}
 	};
 
