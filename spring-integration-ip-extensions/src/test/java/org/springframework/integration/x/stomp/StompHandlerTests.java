@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.springframework.stomp.DefaultStompHandler;
 import org.springframework.stomp.StompHandler;
 import org.springframework.stomp.StompMessage;
+import org.springframework.stomp.StompMessage.Command;
 import org.springframework.stomp.StompSubscriptionCallback;
 
 /**
@@ -38,19 +39,17 @@ public class StompHandlerTests {
 	@Test
 	public void testConnect() {
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put(StompMessage.COMMAND_KEY, "CONNECT");
 		headers.put("accept-version", "1.1");
 		headers.put("host", "localhost");
 		StompHandler handler = new DefaultStompHandler();
-		StompMessage connected = handler.handleStompMessage(new StompMessage(headers, null), "foo");
-		assertEquals("CONNECTED", connected.getHeaders().get(StompMessage.COMMAND_KEY));
+		StompMessage connected = handler.handleStompMessage(new StompMessage(Command.CONNECT, headers, null), "foo");
+		assertEquals(Command.CONNECTED, connected.getCommand());
 		assertEquals("1.1", connected.getHeaders().get("version"));
 	}
 
 	@Test
-	public void testSubscribe() {
+	public void testSubscribeAndUnsubscribe() {
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put(StompMessage.COMMAND_KEY, "SUBSCRIBE");
 		headers.put("destination", "foo");
 		headers.put("id", "0");
 		StompHandler handler = new DefaultStompHandler();
@@ -67,18 +66,16 @@ public class StompHandlerTests {
 				subscribedId.set(id);
 			}
 		});
-		handler.handleStompMessage(new StompMessage(headers, null), "foo");
+		handler.handleStompMessage(new StompMessage(Command.SUBSCRIBE, headers, null), "foo");
 		assertEquals("foo", subscribedSession.get());
 		assertEquals("0", subscribedId.get());
+		testUnsubscribe(handler);
 	}
 
-	@Test
-	public void testUnsubscribe() {
+	private void testUnsubscribe(StompHandler handler) {
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put(StompMessage.COMMAND_KEY, "UNSUBSCRIBE");
 		headers.put("destination", "foo");
 		headers.put("id", "0");
-		StompHandler handler = new DefaultStompHandler();
 		final AtomicReference<Object> unsubscribedSession = new AtomicReference<Object>();
 		final AtomicReference<String> unsubscribedId = new AtomicReference<String>();
 		handler.addDestination("foo", new StompSubscriptionCallback() {
@@ -92,7 +89,7 @@ public class StompHandlerTests {
 				fail("Unexpected call");
 			}
 		});
-		handler.handleStompMessage(new StompMessage(headers, null), "foo");
+		handler.handleStompMessage(new StompMessage(Command.UNSUBSCRIBE, headers, null), "foo");
 		assertEquals("foo", unsubscribedSession.get());
 		assertEquals("0", unsubscribedId.get());
 	}

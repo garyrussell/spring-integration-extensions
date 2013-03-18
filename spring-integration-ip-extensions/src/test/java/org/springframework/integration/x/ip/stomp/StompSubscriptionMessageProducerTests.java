@@ -30,6 +30,7 @@ import org.springframework.integration.x.stomp.StompSubscriptionMessageProducer;
 import org.springframework.stomp.DefaultStompHandler;
 import org.springframework.stomp.StompHandler;
 import org.springframework.stomp.StompMessage;
+import org.springframework.stomp.StompMessage.Command;
 
 /**
  * @author Gary Russell
@@ -47,23 +48,21 @@ public class StompSubscriptionMessageProducerTests {
 		producer.afterPropertiesSet();
 
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put(StompMessage.COMMAND_KEY, "SUBSCRIBE");
 		headers.put("destination", "foo");
 		headers.put("id", "0");
-		handler.handleStompMessage(new StompMessage(headers, null), "baz");
+		handler.handleStompMessage(new StompMessage(Command.SUBSCRIBE, headers, null), "baz");
 		headers.put("id", "1");
-		handler.handleStompMessage(new StompMessage(headers, null), "baz");
+		handler.handleStompMessage(new StompMessage(Command.SUBSCRIBE,headers, null), "baz");
 		headers.put("id", "0");
-		handler.handleStompMessage(new StompMessage(headers, null), "qux");
+		handler.handleStompMessage(new StompMessage(Command.SUBSCRIBE,headers, null), "qux");
 
 		Thread.sleep(1000);
-		headers.put(StompMessage.COMMAND_KEY, "UNSUBSCRIBE");
 		headers.put("id", "0");
-		handler.handleStompMessage(new StompMessage(headers, null), "baz");
+		handler.handleStompMessage(new StompMessage(Command.SUBSCRIBE,headers, null), "baz");
 		headers.put("id", "1");
-		handler.handleStompMessage(new StompMessage(headers, null), "baz");
+		handler.handleStompMessage(new StompMessage(Command.SUBSCRIBE,headers, null), "baz");
 		headers.put("id", "0");
-		handler.handleStompMessage(new StompMessage(headers, null), "qux");
+		handler.handleStompMessage(new StompMessage(Command.SUBSCRIBE,headers, null), "qux");
 
 		assertTrue(output.getQueueSize() >= 24);
 
@@ -71,7 +70,7 @@ public class StompSubscriptionMessageProducerTests {
 		assertNotNull(message);
 		assertEquals("baz", message.getHeaders().get(IpHeaders.CONNECTION_ID));
 		StompMessage stompMessage = (StompMessage) message.getPayload();
-		assertEquals("MESSAGE", stompMessage.getHeaders().get(StompMessage.COMMAND_KEY));
+		assertEquals(Command.MESSAGE, stompMessage.getCommand());
 		assertEquals("foo", stompMessage.getHeaders().get("destination"));
 //		assertEquals("0", stompMessage.getHeaders().get("subscription"));
 		assertEquals("1", stompMessage.getHeaders().get("message-id"));
@@ -81,7 +80,7 @@ public class StompSubscriptionMessageProducerTests {
 		assertNotNull(message);
 		assertEquals("baz", message.getHeaders().get(IpHeaders.CONNECTION_ID));
 		stompMessage = (StompMessage) message.getPayload();
-		assertEquals("MESSAGE", stompMessage.getHeaders().get(StompMessage.COMMAND_KEY));
+		assertEquals(Command.MESSAGE, stompMessage.getCommand());
 		assertEquals("foo", stompMessage.getHeaders().get("destination"));
 //		assertEquals("1", stompMessage.getHeaders().get("subscription"));
 		assertEquals("1", stompMessage.getHeaders().get("message-id"));
@@ -91,7 +90,7 @@ public class StompSubscriptionMessageProducerTests {
 		assertNotNull(message);
 		assertEquals("qux", message.getHeaders().get(IpHeaders.CONNECTION_ID));
 		stompMessage = (StompMessage) message.getPayload();
-		assertEquals("MESSAGE", stompMessage.getHeaders().get(StompMessage.COMMAND_KEY));
+		assertEquals(Command.MESSAGE, stompMessage.getCommand());
 		assertEquals("foo", stompMessage.getHeaders().get("destination"));
 //		assertEquals("0", stompMessage.getHeaders().get("subscription"));
 		assertEquals("1", stompMessage.getHeaders().get("message-id"));
@@ -101,7 +100,7 @@ public class StompSubscriptionMessageProducerTests {
 		assertNotNull(message);
 		assertEquals("baz", message.getHeaders().get(IpHeaders.CONNECTION_ID));
 		stompMessage = (StompMessage) message.getPayload();
-		assertEquals("MESSAGE", stompMessage.getHeaders().get(StompMessage.COMMAND_KEY));
+		assertEquals(Command.MESSAGE, stompMessage.getCommand());
 		assertEquals("foo", stompMessage.getHeaders().get("destination"));
 //		assertEquals("0", stompMessage.getHeaders().get("subscription"));
 		assertEquals("2", stompMessage.getHeaders().get("message-id"));
@@ -111,7 +110,7 @@ public class StompSubscriptionMessageProducerTests {
 		assertNotNull(message);
 		assertEquals("baz", message.getHeaders().get(IpHeaders.CONNECTION_ID));
 		stompMessage = (StompMessage) message.getPayload();
-		assertEquals("MESSAGE", stompMessage.getHeaders().get(StompMessage.COMMAND_KEY));
+		assertEquals(Command.MESSAGE, stompMessage.getCommand());
 		assertEquals("foo", stompMessage.getHeaders().get("destination"));
 //		assertEquals("1", stompMessage.getHeaders().get("subscription"));
 		assertEquals("2", stompMessage.getHeaders().get("message-id"));
@@ -121,7 +120,7 @@ public class StompSubscriptionMessageProducerTests {
 		assertNotNull(message);
 		assertEquals("qux", message.getHeaders().get(IpHeaders.CONNECTION_ID));
 		stompMessage = (StompMessage) message.getPayload();
-		assertEquals("MESSAGE", stompMessage.getHeaders().get(StompMessage.COMMAND_KEY));
+		assertEquals(Command.MESSAGE, stompMessage.getCommand());
 		assertEquals("foo", stompMessage.getHeaders().get("destination"));
 //		assertEquals("0", stompMessage.getHeaders().get("subscription"));
 		assertEquals("2", stompMessage.getHeaders().get("message-id"));

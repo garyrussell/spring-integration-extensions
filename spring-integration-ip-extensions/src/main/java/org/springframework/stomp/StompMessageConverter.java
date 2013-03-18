@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.springframework.stomp.StompMessage.Command;
 import org.springframework.util.Assert;
 
 /**
@@ -58,9 +59,8 @@ public class StompMessageConverter {
 			Parser parser = new Parser(headerString);
 			Map<String, String> headers = new HashMap<String, String>();
 			// TODO: validate command and whether a payload is allowed
-			String token = parser.nextToken(LF);
-			Assert.hasLength(token, "No headers found");
-			headers.put(StompMessage.COMMAND_KEY, token.trim());
+			Command command = Command.valueOf(parser.nextToken(LF).trim());
+			Assert.notNull(command, "No command found");
 			while (parser.hasNext()) {
 				String header = parser.nextToken(COLON);
 				if (header != null) {
@@ -76,7 +76,7 @@ public class StompMessageConverter {
 				}
 			}
 			byte[] payload = new byte[stompBytes.length - payloadIndex];
-			return new StompMessage(headers, payload);
+			return new StompMessage(command, headers, payload);
 		}
 		catch (UnsupportedEncodingException e) {
 			throw new StompException(e);
@@ -86,22 +86,19 @@ public class StompMessageConverter {
 	public byte[] fromStompMessage(StompMessage message) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		Map<String, String> headers = message.getHeaders();
-		String command = headers.get(StompMessage.COMMAND_KEY);
+		Command command = message.getCommand();
 		try {
-			outputStream.write(command.getBytes("UTF-8"));
+			outputStream.write(command.toString().getBytes("UTF-8"));
 			outputStream.write(LF);
 			for (Entry<String, String> entry : headers.entrySet()) {
 				String key = entry.getKey();
-				if (!StompMessage.COMMAND_KEY.equals(key)) {
-					// TODO: escapes
-					key = key.replaceAll("\\\\", "\\\\").replaceAll(":", "\\\\c").replaceAll("\n", "\\\\n");
-					outputStream.write(key.getBytes("UTF-8"));
-					outputStream.write(COLON);
-					String value = entry.getValue();
-					value = value.replaceAll("\\\\", "\\\\").replaceAll(":", "\\\\c").replaceAll("\n", "\\\\n");
-					outputStream.write(value.getBytes("UTF-8"));
-					outputStream.write(LF);
-				}
+				key = key.replaceAll("\\\\", "\\\\").replaceAll(":", "\\\\c").replaceAll("\n", "\\\\n");
+				outputStream.write(key.getBytes("UTF-8"));
+				outputStream.write(COLON);
+				String value = entry.getValue();
+				value = value.replaceAll("\\\\", "\\\\").replaceAll(":", "\\\\c").replaceAll("\n", "\\\\n");
+				outputStream.write(value.getBytes("UTF-8"));
+				outputStream.write(LF);
 			}
 			outputStream.write(LF);
 			outputStream.write(message.getPayload());

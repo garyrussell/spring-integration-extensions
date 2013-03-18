@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.springframework.stomp.StompMessage;
+import org.springframework.stomp.StompMessage.Command;
 import org.springframework.stomp.StompMessageConverter;
 
 /**
@@ -39,8 +40,8 @@ public class BytesToStompConverterTests {
 				host +
 				"\n";
 		StompMessage message = converter.toStompMessage(test.getBytes("UTF-8"));
-		assertEquals(3, message.getHeaders().size());
-		assertEquals("CONNECT", message.getHeaders().get(StompMessage.COMMAND_KEY));
+		assertEquals(2, message.getHeaders().size());
+		assertEquals(Command.CONNECT, message.getCommand());
 		assertEquals("1.1", message.getHeaders().get("accept-version"));
 		assertEquals("stomp.github.org", message.getHeaders().get("host"));
 		assertEquals(0, message.getPayload().length);
@@ -61,8 +62,8 @@ public class BytesToStompConverterTests {
 				host +
 				"\n";
 		StompMessage message = converter.toStompMessage(test.getBytes("UTF-8"));
-		assertEquals(3, message.getHeaders().size());
-		assertEquals("CONNECT", message.getHeaders().get(StompMessage.COMMAND_KEY));
+		assertEquals(2, message.getHeaders().size());
+		assertEquals(Command.CONNECT, message.getCommand());
 		assertEquals("1.1", message.getHeaders().get("accept-version"));
 		assertEquals("st\nomp.gi:thu\\b.org", message.getHeaders().get("ho:\nst"));
 		assertEquals(0, message.getPayload().length);

@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.springframework.stomp.StompMessage.Command;
 import org.springframework.util.Assert;
 
 /**
@@ -36,18 +37,18 @@ public class DefaultStompHandler implements StompHandler {
 
 	@Override
 	public StompMessage handleStompMessage(StompMessage requestMessage, Object session) {
-		String command = requestMessage.getHeaders().get(StompMessage.COMMAND_KEY);
+		Command command = requestMessage.getCommand();
 		Assert.notNull(command, "Command header cannot be null");
-		if ("CONNECT".equals(command)) {
+		if (Command.CONNECT.equals(command)) {
 			return this.connect(requestMessage, session);
 		}
-		else if ("SUBSCRIBE".equals(command)) {
+		else if (Command.SUBSCRIBE.equals(command)) {
 			return this.subscribe(requestMessage, session);
 		}
-		else if ("UNSUBSCRIBE".equals(command)) {
+		else if (Command.UNSUBSCRIBE.equals(command)) {
 			return this.unsubscribe(requestMessage, session);
 		}
-		else if ("DISCONNECT".equals(command)) {
+		else if (Command.DISCONNECT.equals(command)) {
 			return this.disconnect(session);
 		}
 		else {
@@ -60,13 +61,12 @@ public class DefaultStompHandler implements StompHandler {
 		// TODO: check supported versions
 		// TODO: security
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put(StompMessage.COMMAND_KEY, "CONNECTED");
 		headers.put("version", "1.1");
 		headers.put("heart-beat", "0,0"); // TODO: enable heart-beats
 		if (session != null) {
 			headers.put("session", session.toString());
 		}
-		return new StompMessage(headers, EMPTY_PAYLOAD);
+		return new StompMessage(Command.CONNECTED, headers, EMPTY_PAYLOAD);
 	}
 
 	protected StompMessage subscribe(StompMessage subscribeMessage, Object session) {
@@ -95,8 +95,14 @@ public class DefaultStompHandler implements StompHandler {
 		try {
 			String id = getId(unsubscribeMessage);
 			Assert.notNull(id, "No id header found");
-			String destination = this.subscriptionToDestination.get(session).remove(id);
-			Assert.notNull(destination, "No subscription found");
+			Map<String, String> idToDest = this.subscriptionToDestination.get(session);
+			if (idToDest == null) {
+				throw new IllegalStateException("No subscription for '" + id + "' found");
+			}
+			String destination = idToDest.remove(id);
+			if (destination == null) {
+				throw new IllegalStateException("No subscription for '" + id + "' found");
+			}
 			StompSubscriptionCallback callback = this.services.get(destination);
 			callback.unsubscribed(session, id);
 			return null;

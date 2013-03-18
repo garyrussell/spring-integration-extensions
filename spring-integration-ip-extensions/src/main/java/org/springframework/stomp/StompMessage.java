@@ -25,15 +25,30 @@ import java.util.Map;
  */
 public class StompMessage {
 
-	public static final String COMMAND_KEY = "stomp_command";
+	public enum Command {
+		CONNECT,
+		DISCONNECT,
+		SUBSCRIBE,
+		UNSUBSCRIBE,
+
+		CONNECTED,
+		MESSAGE
+	}
+
+	private final Command command;
 
 	private final Map<String, String> headers;
 
 	private final byte[] payload;
 
-	public StompMessage(Map<String, String> headers, byte[] payload) {
+	public StompMessage(Command command, Map<String, String> headers, byte[] payload) {
+		this.command = command;
 		this.headers = headers;
 		this.payload = payload;
+	}
+
+	public Command getCommand() {
+		return command;
 	}
 
 	public Map<String, String> getHeaders() {

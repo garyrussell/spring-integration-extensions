@@ -27,6 +27,7 @@ import org.springframework.integration.x.stomp.StompSubscriptionMessageProducer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stomp.StompHandler;
 import org.springframework.stomp.StompMessage;
+import org.springframework.stomp.StompMessage.Command;
 
 /**
  * @author Gary Russell
@@ -48,13 +49,12 @@ public class TestStompSubscriptionMessageProducer extends StompSubscriptionMessa
 					String connectionId = entry.getKey();
 					for (String id : entry.getValue()) {
 						Map<String, String> headers = new HashMap<String, String>();
-						headers.put(StompMessage.COMMAND_KEY, "MESSAGE");
 						headers.put("subscription", id);
 						headers.put("message-id", Integer.toString(thisMessageNumber));
 						headers.put("destination", getDestination());
 						headers.put("content-type", "text/plain");
 						byte[] payload = "Hello, world!".getBytes();
-						StompMessage stompMessage = new StompMessage(headers, payload);
+						StompMessage stompMessage = new StompMessage(Command.MESSAGE, headers, payload);
 						sendMessage(MessageBuilder.withPayload(stompMessage)
 								.setHeader(IpHeaders.CONNECTION_ID, connectionId)
 								.build());
