@@ -25,7 +25,7 @@ public interface StompHandler {
 
 	StompMessage handleStompMessage(StompMessage requestMessage, Object session);
 
-	void addDestination(String destination, StompSubscriptionCallback callback);
+	void addDestination(String destination, StompProcessor callback);
 
 	void removeDestination(String destination);
 

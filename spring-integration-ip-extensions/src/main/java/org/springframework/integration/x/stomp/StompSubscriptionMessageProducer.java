@@ -15,6 +15,7 @@
  */
 package org.springframework.integration.x.stomp;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,7 +25,8 @@ import java.util.Set;
 import org.springframework.integration.endpoint.MessageProducerSupport;
 import org.springframework.stomp.DefaultStompHandler;
 import org.springframework.stomp.StompHandler;
-import org.springframework.stomp.StompSubscriptionCallback;
+import org.springframework.stomp.StompMessage;
+import org.springframework.stomp.StompProcessorSupport;
 import org.springframework.util.Assert;
 
 /**
@@ -57,7 +59,7 @@ public abstract class StompSubscriptionMessageProducer extends MessageProducerSu
 	@Override
 	protected final void onInit() {
 		super.onInit();
-		this.stompHandler.addDestination(this.destination, new StompSubscriptionCallback() {
+		this.stompHandler.addDestination(this.destination, new StompProcessorSupport() {
 
 			@Override
 			public void subscribed(Object session, String id) {
@@ -91,11 +93,34 @@ public abstract class StompSubscriptionMessageProducer extends MessageProducerSu
 					}
 				}
 			}
+
+			@Override
+			public void processSend(Object session, StompMessage message) {
+				handleProcessSend(session, message);
+			}
+
+			@Override
+			public void processTransaction(Object session, Collection<StompMessage> messages) {
+				handleProcessTransaction(session, messages);
+			}
+
 		});
 		this.onOnInit();
 	}
 
 	protected void onOnInit() {
+	}
+
+	protected void handleProcessSend(Object session, StompMessage message) {
+		if (logger.isWarnEnabled()) {
+			logger.warn("Processor doesn't handle send for " + message);
+		}
+	}
+
+	protected void handleProcessTransaction(Object session, Collection<StompMessage> messages) {
+		if (logger.isWarnEnabled()) {
+			logger.warn("Processor doesn't handle transaction for " + messages);
+		}
 	}
 
 	protected final Map<String, Set<String>> getSubscriptions() {

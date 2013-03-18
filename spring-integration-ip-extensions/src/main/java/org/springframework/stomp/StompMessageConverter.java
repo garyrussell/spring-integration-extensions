@@ -53,6 +53,10 @@ public class StompMessageConverter {
 		else {
 			stompBytes = (byte[]) stomp;
 		}
+		int totalLength = stompBytes.length;
+		if (stompBytes[totalLength-1] == 0) {
+			totalLength--;
+		}
 		int payloadIndex = findPayloadStart(stompBytes);
 		try {
 			String headerString = new String(stompBytes, 0, payloadIndex, "UTF-8");
@@ -75,7 +79,8 @@ public class StompMessageConverter {
 					}
 				}
 			}
-			byte[] payload = new byte[stompBytes.length - payloadIndex];
+			byte[] payload = new byte[totalLength - payloadIndex];
+			System.arraycopy(stompBytes, payloadIndex, payload, 0, totalLength - payloadIndex);
 			return new StompMessage(command, headers, payload);
 		}
 		catch (UnsupportedEncodingException e) {

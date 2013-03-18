@@ -15,12 +15,18 @@
  */
 package org.springframework.stomp;
 
+import java.util.Collection;
+
 /**
  * @author Gary Russell
  * @since 3.0
  *
  */
-public interface StompSubscriptionCallback {
+public interface StompProcessor {
+
+	void processSend(Object session, StompMessage message);
+
+	void processTransaction(Object session, Collection<StompMessage> messages);
 
 	/**
 	 * Called when a connection subscribes to a service.

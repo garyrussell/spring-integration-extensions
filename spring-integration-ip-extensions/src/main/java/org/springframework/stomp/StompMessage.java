@@ -30,6 +30,10 @@ public class StompMessage {
 		DISCONNECT,
 		SUBSCRIBE,
 		UNSUBSCRIBE,
+		BEGIN,
+		SEND,
+		COMMIT,
+		ABORT,
 
 		CONNECTED,
 		MESSAGE

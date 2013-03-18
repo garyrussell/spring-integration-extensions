@@ -15,6 +15,7 @@
  */
 package org.springframework.integration.x.ip.stomp;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,16 +49,8 @@ public class TestStompSubscriptionMessageProducer extends StompSubscriptionMessa
 				for (Entry<String, Set<String>> entry : getSubscriptions().entrySet()) {
 					String connectionId = entry.getKey();
 					for (String id : entry.getValue()) {
-						Map<String, String> headers = new HashMap<String, String>();
-						headers.put("subscription", id);
-						headers.put("message-id", Integer.toString(thisMessageNumber));
-						headers.put("destination", getDestination());
-						headers.put("content-type", "text/plain");
 						byte[] payload = "Hello, world!".getBytes();
-						StompMessage stompMessage = new StompMessage(Command.MESSAGE, headers, payload);
-						sendMessage(MessageBuilder.withPayload(stompMessage)
-								.setHeader(IpHeaders.CONNECTION_ID, connectionId)
-								.build());
+						doSend(thisMessageNumber, connectionId, id, payload);
 					}
 				}
 			}
@@ -65,6 +58,7 @@ public class TestStompSubscriptionMessageProducer extends StompSubscriptionMessa
 				schedule();
 			}
 		}
+
 	};
 
 	public TestStompSubscriptionMessageProducer(String destination, long delay) {
@@ -84,6 +78,37 @@ public class TestStompSubscriptionMessageProducer extends StompSubscriptionMessa
 		taskScheduler.initialize();
 		this.setTaskScheduler(taskScheduler);
 		schedule();
+	}
+
+	private void doSend(int thisMessageNumber, String connectionId, String id, byte[] payload) {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("subscription", id);
+		headers.put("message-id", Integer.toString(thisMessageNumber));
+		headers.put("destination", getDestination());
+		headers.put("content-type", "text/plain");
+		StompMessage stompMessage = new StompMessage(Command.MESSAGE, headers, payload);
+		sendMessage(MessageBuilder.withPayload(stompMessage)
+				.setHeader(IpHeaders.CONNECTION_ID, connectionId)
+				.build());
+	}
+
+	@Override
+	protected void handleProcessTransaction(Object session, Collection<StompMessage> messages) {
+		int thisMessageNumber = ++this.messageNumber;
+		for (Entry<String, Set<String>> entry : getSubscriptions().entrySet()) {
+			String connectionId = entry.getKey();
+			if (connectionId.equals(session)) {
+				StringBuilder builder = new StringBuilder();
+				builder.append("Received transaction with: ");
+				for (StompMessage message : messages) {
+					builder.append("[").append(new String(message.getPayload())).append("]");
+				}
+				byte[] payload = builder.toString().getBytes();
+				for (String id : entry.getValue()) {
+					doSend(thisMessageNumber, connectionId, id, payload);
+				}
+			}
+		}
 	}
 
 	private void schedule() {

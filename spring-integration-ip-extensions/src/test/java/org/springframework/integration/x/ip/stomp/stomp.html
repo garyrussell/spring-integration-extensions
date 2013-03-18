@@ -113,6 +113,16 @@
 			document.getElementById("unsub2").disabled = true
 		}
 	}
+	
+	function doSendInTx(message) {
+		if (client) {
+			var txId = 'baz';
+			client.begin(txId)
+			client.send('fooDest', {transaction: txId}, 'foo');
+			client.send('fooDest', {transaction: txId}, 'bar');
+			client.commit(txId)
+		}
+	}
 </script>
 <center>
 	<textarea rows="20" cols="50" id="received1" readonly="readonly"></textarea>
@@ -124,6 +134,8 @@
 		<input type="button" value="Close" onclick="doClose()" align="center"/>
 		<input  id="unsub2"type="button" value="Unsubscribe2" onclick="doUnsub2()" align="center"/>
 		<input id="sub2" type="button" value="Subscribe2" onclick="doSub2()" align="center"/>
+		<br/>
+		<input id="sendTx" type="button" value="SendTx" onclick="doSendInTx()" align="center"/>
 	</form>
 </center>
 </body>
