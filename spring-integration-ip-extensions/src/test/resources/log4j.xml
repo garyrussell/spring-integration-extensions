@@ -16,11 +16,11 @@
 	</logger>
 
 	<logger name="org.springframework.integration">
-		<level value="info" />
+		<level value="debug" />
 	</logger>
 
 	<logger name="org.springframework.integration.x">
-		<level value="info" />
+		<level value="debug" />
 	</logger>
 
 	<logger name="org.springframework.integration.endpoint.SourcePollingChannelAdapter">
@@ -33,7 +33,7 @@
 
 	<!-- Root Logger -->
 	<root>
-		<priority value="warn" />
+		<priority value="trace" />
 		<appender-ref ref="console" />
 	</root>
 
