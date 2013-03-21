@@ -34,6 +34,8 @@ public class StompMessageConverter {
 
 	public static final byte LF = 0x0a;
 
+	public static final byte CR = 0x0d;
+
 	private static final byte COLON = ':';
 
 	/**
@@ -58,6 +60,9 @@ public class StompMessageConverter {
 			totalLength--;
 		}
 		int payloadIndex = findPayloadStart(stompBytes);
+		if (payloadIndex == 0) {
+			throw new StompException("No command found");
+		}
 		try {
 			String headerString = new String(stompBytes, 0, payloadIndex, "UTF-8");
 			Parser parser = new Parser(headerString);
@@ -97,11 +102,11 @@ public class StompMessageConverter {
 			outputStream.write(LF);
 			for (Entry<String, String> entry : headers.entrySet()) {
 				String key = entry.getKey();
-				key = key.replaceAll("\\\\", "\\\\").replaceAll(":", "\\\\c").replaceAll("\n", "\\\\n");
+				key = replaceAllOutbound(key);
 				outputStream.write(key.getBytes("UTF-8"));
 				outputStream.write(COLON);
 				String value = entry.getValue();
-				value = value.replaceAll("\\\\", "\\\\").replaceAll(":", "\\\\c").replaceAll("\n", "\\\\n");
+				value = replaceAllOutbound(value);
 				outputStream.write(value.getBytes("UTF-8"));
 				outputStream.write(LF);
 			}
@@ -114,24 +119,39 @@ public class StompMessageConverter {
 		}
 	}
 
+	private String replaceAllOutbound(String key) {
+		return key.replaceAll("\\\\", "\\\\")
+				.replaceAll(":", "\\\\c")
+				.replaceAll("\n", "\\\\n")
+				.replaceAll("\r", "\\\\r");
+	}
+
 	private int findPayloadStart(byte[] bytes) {
 		int i;
-		// ignore any leading \n from the previous message
+		// ignore any leading EOL from the previous message
 		for (i = 0; i < bytes.length; i++) {
-			if (bytes[i] != '\n') {
+			if (bytes[i] != '\n' && bytes[i] != '\r' ) {
 				break;
 			}
 			bytes[i] = ' ';
 		}
+		int payloadOffset = 0;
 		for (; i < bytes.length - 1; i++) {
-			if (bytes[i] == LF && bytes[i+1] == LF) {
+			if ((bytes[i] == LF && bytes[i+1] == LF)) {
+				payloadOffset = i + 2;
+				break;
+			}
+			if (i < bytes.length - 3 &&
+				(bytes[i] == CR && bytes[i+1] == LF &&
+				 bytes[i+2] == CR && bytes[i+3] == LF)) {
+				payloadOffset = i + 4;
 				break;
 			}
 		}
 		if (i >= bytes.length) {
 			throw new StompException("No end of headers found");
 		}
-		return i + 2;
+		return payloadOffset;
 	}
 
 	private class Parser {
@@ -159,6 +179,12 @@ public class StompMessageConverter {
 					this.offset++;
 					return null;
 				}
+				else if (this.offset == this.content.length() - 2 && delimiter == COLON &&
+						this.content.charAt(this.offset) == CR &&
+						this.content.charAt(this.offset + 1) == LF) {
+					this.offset += 2;
+					return null;
+				}
 				else {
 					throw new StompException("No delimiter found at offset " + offset + " in " + this.content);
 				}
@@ -170,6 +196,7 @@ public class StompMessageConverter {
 				char escaped = this.content.charAt(escapeAt + 1);
 				if (escaped == 'n' || escaped == 'c' || escaped == '\\') {
 					token = token.replaceAll("\\\\n", "\n")
+							.replaceAll("\\\\r", "\r")
 							.replaceAll("\\\\c", ":")
 							.replaceAll("\\\\\\\\", "\\\\");
 				}
@@ -177,7 +204,13 @@ public class StompMessageConverter {
 					throw new StompException("Invalid escape sequence \\" + escaped);
 				}
 			}
-			return token.substring(0, token.length() - 1);
+			int length = token.length();
+			if (delimiter == LF && length > 1 && token.charAt(length - 2) == CR) {
+				return token.substring(0, length - 2);
+			}
+			else {
+				return token.substring(0, length - 1);
+			}
 		}
 	}
 }

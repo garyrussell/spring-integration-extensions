@@ -55,7 +55,7 @@ public class DefaultStompHandler implements StompHandler {
 	public StompMessage handleStompMessage(StompMessage requestMessage, Object session) {
 		Command command = requestMessage.getCommand();
 		Assert.notNull(command, "Command header cannot be null");
-		if (Command.CONNECT.equals(command)) {
+		if (Command.CONNECT.equals(command) || Command.STOMP.equals(command)) {
 			return this.connect(requestMessage, session);
 		}
 		else if (Command.SUBSCRIBE.equals(command)) {
@@ -86,10 +86,21 @@ public class DefaultStompHandler implements StompHandler {
 	}
 
 	protected StompMessage connect(StompMessage connectMessage, Object session) {
-		// TODO: check supported versions
 		// TODO: security
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put("version", "1.1");
+		String acceptVersion = connectMessage.getHeaders().get("accept-version");
+		if (acceptVersion == null) {
+			// version 1.0
+		}
+		else if (acceptVersion.contains("1.2")) {
+			headers.put("version", "1.2");
+		}
+		else if (acceptVersion.contains("1.1")) {
+			headers.put("version", "1.1");
+		}
+		else {
+			throw new StompException("Unsupported version '" + acceptVersion + "'");
+		}
 		headers.put("heart-beat", "0,0"); // TODO: enable heart-beats
 		if (session != null) {
 			headers.put("session", session.toString());

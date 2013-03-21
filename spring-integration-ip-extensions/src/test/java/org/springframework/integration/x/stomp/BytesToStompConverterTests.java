@@ -56,7 +56,7 @@ public class BytesToStompConverterTests {
 	public void testConnectWithEscapes() throws Exception {
 		StompMessageConverter converter = new StompMessageConverter();
 		String accept = "accept-version:1.1\n";
-		String host = "ho\\c\\nst:st\\nomp.gi\\cthu\\b.org\n";
+		String host = "ho\\c\\ns\\rt:st\\nomp.gi\\cthu\\b.org\n";
 		String test = "\n\n\nCONNECT\n" + // test skipping of leading \n from previous msg
 				accept +
 				host +
@@ -65,11 +65,55 @@ public class BytesToStompConverterTests {
 		assertEquals(2, message.getHeaders().size());
 		assertEquals(Command.CONNECT, message.getCommand());
 		assertEquals("1.1", message.getHeaders().get("accept-version"));
-		assertEquals("st\nomp.gi:thu\\b.org", message.getHeaders().get("ho:\nst"));
+		assertEquals("st\nomp.gi:thu\\b.org", message.getHeaders().get("ho:\ns\rt"));
 		assertEquals(0, message.getPayload().length);
 
 		String convertedBack = new String(converter.fromStompMessage(message), "UTF-8");
 		assertEquals(test.substring(3).length(), convertedBack.length());
+		assertTrue(convertedBack.contains(accept));
+		assertTrue(convertedBack.contains(host));
+	}
+
+	@Test
+	public void testConnectCR12() throws Exception {
+		StompMessageConverter converter = new StompMessageConverter();
+		String accept = "accept-version:1.2\n";
+		String host = "host:stomp.github.org\n";
+		String test = "\n\n\nCONNECT\r\n" + // test skipping of leading \n from previous msg
+				accept.replaceAll("\n", "\r\n") +
+				host.replaceAll("\n", "\r\n") +
+				"\r\n";
+		StompMessage message = converter.toStompMessage(test.getBytes("UTF-8"));
+		assertEquals(2, message.getHeaders().size());
+		assertEquals(Command.CONNECT, message.getCommand());
+		assertEquals("1.2", message.getHeaders().get("accept-version"));
+		assertEquals("stomp.github.org", message.getHeaders().get("host"));
+		assertEquals(0, message.getPayload().length);
+
+		String convertedBack = new String(converter.fromStompMessage(message), "UTF-8");
+		assertEquals(test.length() - 7, convertedBack.length());
+		assertTrue(convertedBack.contains(accept));
+		assertTrue(convertedBack.contains(host));
+	}
+
+	@Test
+	public void testConnectWithEscapesAndCR12() throws Exception {
+		StompMessageConverter converter = new StompMessageConverter();
+		String accept = "accept-version:1.1\n";
+		String host = "ho\\c\\ns\\rt:st\\nomp.gi\\cthu\\b.org\n";
+		String test = "\n\n\nCONNECT\r\n" + // test skipping of leading \n from previous msg
+				accept.replaceAll("\n", "\r\n") +
+				host.replaceAll("\n", "\r\n") +
+				"\r\n";
+		StompMessage message = converter.toStompMessage(test.getBytes("UTF-8"));
+		assertEquals(2, message.getHeaders().size());
+		assertEquals(Command.CONNECT, message.getCommand());
+		assertEquals("1.1", message.getHeaders().get("accept-version"));
+		assertEquals("st\nomp.gi:thu\\b.org", message.getHeaders().get("ho:\ns\rt"));
+		assertEquals(0, message.getPayload().length);
+
+		String convertedBack = new String(converter.fromStompMessage(message), "UTF-8");
+		assertEquals(test.length() - 7, convertedBack.length());
 		assertTrue(convertedBack.contains(accept));
 		assertTrue(convertedBack.contains(host));
 	}

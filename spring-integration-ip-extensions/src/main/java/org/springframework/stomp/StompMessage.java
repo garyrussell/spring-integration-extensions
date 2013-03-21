@@ -27,6 +27,7 @@ public class StompMessage {
 
 	public enum Command {
 		CONNECT,
+		STOMP,
 		DISCONNECT,
 		SUBSCRIBE,
 		UNSUBSCRIBE,

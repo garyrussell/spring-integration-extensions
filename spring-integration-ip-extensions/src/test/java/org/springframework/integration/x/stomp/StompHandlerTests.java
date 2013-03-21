@@ -51,6 +51,17 @@ public class StompHandlerTests {
 	}
 
 	@Test
+	public void testStomp12() {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("accept-version", "1.2");
+		headers.put("host", "localhost");
+		StompHandler handler = new DefaultStompHandler();
+		StompMessage connected = handler.handleStompMessage(new StompMessage(Command.STOMP, headers, null), "foo");
+		assertEquals(Command.CONNECTED, connected.getCommand());
+		assertEquals("1.2", connected.getHeaders().get("version"));
+	}
+
+	@Test
 	public void testSubscribeAndUnsubscribe() {
 		Map<String, String> headers = new HashMap<String, String>();
 		headers.put("destination", "foo");
