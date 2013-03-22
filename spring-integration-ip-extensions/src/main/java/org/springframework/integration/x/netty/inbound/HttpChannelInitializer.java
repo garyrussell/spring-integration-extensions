@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.integration.x.netty.inbound.NettyRequestHandlingEndpoint.InboundNettyAdapterCallback;
 
 
 /**
@@ -34,7 +35,7 @@ import org.springframework.beans.factory.InitializingBean;
  */
 public class HttpChannelInitializer extends ChannelInitializer<Channel> implements InitializingBean {
 
-	private final NettyAdapterCallback adapter;
+	private final InboundNettyAdapterCallback adapter;
 
 	public HttpChannelInitializer(NettyRequestHandlingEndpoint endpoint) {
 		adapter = endpoint.registerChannelInitializer(this);

@@ -150,10 +150,10 @@ public class NettyRequestHandlingEndpoint extends MessagingGatewaySupport implem
 		this.serverBootstrap.shutdown();
 	}
 
-	public NettyAdapterCallback registerChannelInitializer(ChannelInitializer<Channel> initializer) {
+	public InboundNettyAdapterCallback registerChannelInitializer(ChannelInitializer<Channel> initializer) {
 		this.channelInitializer = initializer;
 
-		return new NettyAdapterCallback() {
+		return new InboundNettyAdapterCallback() {
 
 			@Override
 			public Object sendAndReceive(Object object) {
@@ -197,6 +197,19 @@ public class NettyRequestHandlingEndpoint extends MessagingGatewaySupport implem
 		finally {
 			this.serverBootstrap.shutdown();
 		}
+	}
+
+	public interface InboundNettyAdapterCallback {
+
+		void send(Object object);
+
+		Object sendAndReceive(Object object);
+
+		boolean isExpectReply();
+
+		void setRequestMapper(InboundMessageMapper<?> requestMapper);
+
+		void setReplyMapper(OutboundMessageMapper<?> replyMapper);
 	}
 
 }
