@@ -112,6 +112,7 @@ public class StompMessageConverter {
 			}
 			outputStream.write(LF);
 			outputStream.write(message.getPayload());
+			outputStream.write(0);
 			return outputStream.toByteArray();
 		}
 		catch (IOException e) {

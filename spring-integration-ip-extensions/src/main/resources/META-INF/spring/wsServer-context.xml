@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-ip="http://www.springframework.org/schema/integration/ip"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration/ip http://www.springframework.org/schema/integration/ip/spring-integration-ip.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<context:annotation-config />
+
+	<int-ip:tcp-connection-factory id="wsServer"
+		type="server"
+		port="19876"
+		interceptor-factory-chain="interceptors"
+		serializer="wsSerializer"
+		deserializer="wsSerializer"
+		mapper="mapper" />
+
+	<bean id="mapper" class="org.springframework.integration.x.ip.websocket.WebSocketMessageMapper">
+		<constructor-arg ref="webSocketInterceptorFactory"/>
+	</bean>
+
+	<bean id="wsSerializer" class="org.springframework.integration.x.ip.websocket.WebSocketSerializer">
+		<property name="server" value="true" />
+	</bean>
+
+	<bean id="interceptors" class="org.springframework.integration.ip.tcp.connection.TcpConnectionInterceptorFactoryChain">
+		<property name="interceptors" ref="webSocketInterceptorFactory" />
+	</bean>
+
+	<bean id="webSocketInterceptorFactory"
+		class="org.springframework.integration.x.ip.websocket.WebSocketTcpConnectionInterceptorFactory" />
+
+	<int-ip:tcp-inbound-channel-adapter
+		connection-factory="wsServer"
+		channel="toStomp" />
+
+	<int:chain input-channel="toStomp" output-channel="toServerChannel">
+		<int:transformer expression="payload.payload" />
+		<int:transformer>
+			<bean class="org.springframework.integration.x.stomp.transformer.StompBytesToWSMessageTransformer" />
+		</int:transformer>
+	</int:chain>
+
+	<int:service-activator input-channel="toServerChannel" output-channel="toBrowserChannel" 
+		ref="server" method="handleWs"/>
+
+	<bean id="server" class="org.springframework.integration.x.ip.wsserver.Server" />
+
+	<int:channel id="toBrowserChannel" />
+
+	<int:chain input-channel="toBrowserChannel">
+		<int:transformer>
+			<bean class="org.springframework.integration.x.stomp.transformer.WSMessageToStompBytesTransformer" />
+		</int:transformer>
+		<int-ip:tcp-outbound-channel-adapter
+			connection-factory="wsServer" />
+	</int:chain>
+
+	<!-- TELNET Server -->
+	
+	<int-ip:tcp-connection-factory id="telnet" type="server" port="1111" />
+
+	<int-ip:tcp-inbound-channel-adapter connection-factory="telnet" channel="fromTelnet" />
+	
+	<int:chain input-channel="fromTelnet" output-channel="toTelnet">
+		<int:transformer expression="new String(payload, 'UTF-8')"/>
+		<int:service-activator ref="server" method="handleTelnet"/>
+	</int:chain>
+
+	<int:channel id="toTelnet" />
+
+	<int-ip:tcp-outbound-channel-adapter connection-factory="telnet" channel="toTelnet" />
+	
+</beans>

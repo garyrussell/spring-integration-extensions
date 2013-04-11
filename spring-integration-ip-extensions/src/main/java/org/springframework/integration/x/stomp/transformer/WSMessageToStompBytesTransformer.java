@@ -15,10 +15,14 @@
  */
 package org.springframework.integration.x.stomp.transformer;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.springframework.integration.Message;
-import org.springframework.integration.support.MessageBuilder;
 import org.springframework.integration.transformer.AbstractTransformer;
 import org.springframework.stomp.StompMessage;
+import org.springframework.stomp.StompMessage.Command;
 import org.springframework.stomp.StompMessageConverter;
 import org.springframework.util.Assert;
 
@@ -27,7 +31,7 @@ import org.springframework.util.Assert;
  * @since 3.0
  *
  */
-public class BytesToStompMessageTransformer extends AbstractTransformer {
+public class WSMessageToStompBytesTransformer extends AbstractTransformer {
 
 	private volatile StompMessageConverter converter = new StompMessageConverter();
 
@@ -38,13 +42,25 @@ public class BytesToStompMessageTransformer extends AbstractTransformer {
 
 	@Override
 	protected Object doTransform(Message<?> message) throws Exception {
-		Assert.isInstanceOf(byte[].class, message.getPayload(), "Invalid Payload");
-		byte[] payload = (byte[]) message.getPayload();
-		StompMessage stompMessage = this.converter.toStompMessage(payload);
-		return MessageBuilder.withPayload(stompMessage.getPayload())
-				.copyHeaders(stompMessage.getHeaders())
-				.copyHeadersIfAbsent(message.getHeaders())
-				.build();
+		StompMessage stompMessage;
+		if (message.getPayload() instanceof StompMessage) {
+			stompMessage = (StompMessage) message.getPayload();
+		}
+		else {
+			Assert.isInstanceOf(String.class, message.getPayload());
+			String command = (String) message.getHeaders().get("ws_command");
+			Assert.notNull(command, "command cannot be null");
+			Map<String, String> headers = new HashMap<String, String>();
+			for (Entry<String, Object> entry : message.getHeaders().entrySet()) {
+				String key = entry.getKey();
+				if (!key.equals("ws_command") && key.startsWith("ws_")) {
+					headers.put(key.substring(3), (String) entry.getValue());
+				}
+			}
+			byte[] payload = ((String) message.getPayload()).getBytes("UTF-8");
+			stompMessage = new StompMessage(Command.valueOf(command), headers, payload);
+		}
+		return this.converter.fromStompMessage(stompMessage);
 	}
 
 }

@@ -1,0 +1,132 @@
+<!--
+/*
+ * Copyright 2002-2013 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ -->
+ <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+		"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Spring Integration Stomp Over Web Socket Test</title>
+	<script src="https://raw.github.com/jmesnil/stomp-websocket/master/dist/stomp.js"></script>
+</head>
+
+<body>
+<script type="text/javascript">
+	var client;
+	var sub1;
+	var sub2;
+
+	function doSub1(message) {
+		if (client) {
+			sub1 = client.subscribe(document.getElementById("dest").value, fooDestOnMessage1);
+			addMessage(document.getElementById("received1"), 'Subscribed');
+			document.getElementById("sub1").disabled = true
+			document.getElementById("unsub1").disabled = false
+		}
+	}
+
+	function doSub2(message) {
+		if (client) {
+			sub2 = client.subscribe(document.getElementById("dest").value, fooDestOnMessage2);
+			addMessage(document.getElementById("received2"), 'Subscribed');
+			document.getElementById("sub2").disabled = true
+			document.getElementById("unsub2").disabled = false
+		}
+	}
+	fooDestOnMessage = function(message, textArea) {
+	    // called when the client receives a STOMP message from the server
+	    if (message.body) {
+	    	addMessage(textArea, message.body)
+	    } else {
+	      alert("got empty message");
+	    }
+	 }		
+
+	fooDestOnMessage1 = function(message) {
+		fooDestOnMessage(message, document.getElementById("received1"));
+	}
+
+	fooDestOnMessage2 = function(message) {
+		fooDestOnMessage(message, document.getElementById("received2"));
+	}
+
+	connect_callback = function() {
+		addMessage(document.getElementById("received1"), 'Connected')
+		addMessage(document.getElementById("received2"), 'Connected')
+	}
+
+	if (window.WebSocket) {
+		client = Stomp.client("ws://localhost:19876/stomp");
+		client.connect('', '', connect_callback);
+	} else {
+		alert("Your browser does not support Websockets. (Use Chrome)");
+	}
+
+	function addMessage(textArea, message) {
+		textArea.value += message + '\n'
+		textArea.scrollTop = textArea.scrollHeight				
+	}
+
+	function doClose(message) {
+		if (client) {
+			client.disconnect(function() {
+				addMessage(document.getElementById("received1"), 'Disconnected');
+				addMessage(document.getElementById("received2"), 'Disconnected');
+				document.getElementById("unsub1").disabled = true
+				document.getElementById("unsub2").disabled = true
+				document.getElementById("sub1").disabled = true
+				document.getElementById("sub2").disabled = true
+			})
+		}
+	}
+	
+	function doUnsub1(message) {
+		if (client) {
+			client.unsubscribe(sub1)
+			addMessage(document.getElementById("received1"), 'Unsubscribed');
+			document.getElementById("sub1").disabled = false
+			document.getElementById("unsub1").disabled = true
+		}
+	}
+
+	function doUnsub2(message) {
+		if (client) {
+			client.unsubscribe(sub2)
+			addMessage(document.getElementById("received2"), 'Unsubscribed');
+			document.getElementById("sub2").disabled = false
+			document.getElementById("unsub2").disabled = true
+		}
+	}
+	
+</script>
+<center>
+	Destination<br/>
+	<textarea id="dest">fooDest</textarea><br/>
+	<textarea rows="20" cols="50" id="received1" readonly="readonly"></textarea>
+	<textarea rows="20" cols="50" id="received2" readonly="readonly"></textarea>
+	<br/>
+	<form>
+		<input id="unsub1" type="button" value="Unsubscribe1" onclick="doUnsub1()" align="center" disabled="true"/>
+		<input id="sub1" type="button" value="Subscribe1" onclick="doSub1()" align="center"/>
+		<input type="button" value="Close" onclick="doClose()" align="center"/>
+		<input  id="unsub2"type="button" value="Unsubscribe2" onclick="doUnsub2()" align="center" disabled="true"/>
+		<input id="sub2" type="button" value="Subscribe2" onclick="doSub2()" align="center"/>
+		<br/>
+	</form>
+</center>
+</body>
+</html>
