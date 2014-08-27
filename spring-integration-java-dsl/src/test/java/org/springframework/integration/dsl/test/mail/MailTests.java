@@ -50,6 +50,7 @@ import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.channel.MessageChannels;
 import org.springframework.integration.dsl.mail.Mail;
 import org.springframework.integration.dsl.support.Pollers;
+import org.springframework.integration.dsl.support.StringStringMapBuilder;
 import org.springframework.integration.dsl.test.mail.PoorMansMailServer.ImapServer;
 import org.springframework.integration.dsl.test.mail.PoorMansMailServer.Pop3Server;
 import org.springframework.integration.dsl.test.mail.PoorMansMailServer.SmtpServer;
@@ -129,7 +130,7 @@ public class MailTests {
 	private ImapIdleChannelAdapter imapIdleAdapter;
 
 	@Test
-	public void testOutbound() throws Exception {
+	public void testSmtp() throws Exception {
 		assertEquals("localhost", TestUtils.getPropertyValue(this.sendMailHandler, "mailSender.host"));
 
 		Properties javaMailProperties = TestUtils.getPropertyValue(this.sendMailHandler,
@@ -159,8 +160,8 @@ public class MailTests {
 		assertNotNull(message);
 		MimeMessage mm = (MimeMessage) message.getPayload();
 		assertEquals("foo@bar", mm.getRecipients(RecipientType.TO)[0].toString());
-		assertEquals("bar@baz", mm.getFrom()[0].toString());
-		assertEquals("Test Email", mm.getSubject());
+		assertEquals("bar@baz", message.getHeaders().get(MailHeaders.FROM));
+		assertEquals("Test Email", message.getHeaders().get(MailHeaders.SUBJECT));
 		assertEquals("foo\r\n", mm.getContent());
 	}
 
@@ -212,6 +213,9 @@ public class MailTests {
 									.javaMailProperties(p -> p.put("mail.debug", "true")),
 							e -> e.autoStartup(true)
 									.poller(Pollers.fixedDelay(1000)))
+					.enrichHeaders(s -> s.headerExpressions(new StringStringMapBuilder()
+									.put(MailHeaders.SUBJECT, "payload.subject")
+									.put(MailHeaders.FROM, "payload.from[0].toString()")))
 					.channel(MessageChannels.queue("pop3Channel"))
 					.get();
 		}

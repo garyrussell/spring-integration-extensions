@@ -21,8 +21,9 @@ import org.springframework.integration.mail.MailHeaders;
 
 /**
  * @author Artem Bilan
+ * @author Gary Russell
  */
-public class MailHeadersBuilder extends MapBuilder<MailHeadersBuilder, String> {
+public class MailHeadersBuilder extends MapBuilder<MailHeadersBuilder, String, Object> {
 
 	MailHeadersBuilder() {
 	}

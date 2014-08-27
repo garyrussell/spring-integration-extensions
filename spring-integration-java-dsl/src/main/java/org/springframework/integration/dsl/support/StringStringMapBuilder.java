@@ -13,35 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.integration.dsl.support;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-
 /**
- * @author Artem Bilan
+ * A map builder creating a map with String keys and values.
+ *
+ * @author Gary Russell
+ *
  */
-public class MapBuilder<B extends MapBuilder<B, K, V>, K, V> {
-
-	protected final static SpelExpressionParser PARSER = new SpelExpressionParser();
-
-	private final Map<K, V> map = new HashMap<K, V>();
-
-	public B put(K key, V value) {
-		this.map.put(key, value);
-		return _this();
-	}
-
-	public Map<K, V> get() {
-		return this.map;
-	}
-
-	@SuppressWarnings("unchecked")
-	protected final B _this() {
-		return (B) this;
-	}
+public class StringStringMapBuilder extends MapBuilder<StringStringMapBuilder, String, String> {
 
 }

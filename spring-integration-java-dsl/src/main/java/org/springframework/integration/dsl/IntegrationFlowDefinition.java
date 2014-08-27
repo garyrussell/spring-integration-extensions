@@ -78,6 +78,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * @author Artem Bilan
+ * @author Gary Russell
  */
 public abstract class IntegrationFlowDefinition<B extends IntegrationFlowDefinition<B>> {
 
@@ -288,11 +289,11 @@ public abstract class IntegrationFlowDefinition<B extends IntegrationFlowDefinit
 		return this.handle(enricherSpec.get(), endpointConfigurer);
 	}
 
-	public B enrichHeaders(MapBuilder<?, String> headers) {
+	public B enrichHeaders(MapBuilder<?, String, Object> headers) {
 		return enrichHeaders(headers, null);
 	}
 
-	public B enrichHeaders(MapBuilder<?, String> headers,
+	public B enrichHeaders(MapBuilder<?, String, Object> headers,
 			EndpointConfigurer<GenericEndpointSpec<MessageTransformingHandler>> endpointConfigurer) {
 		return enrichHeaders(headers.get(), endpointConfigurer);
 	}
@@ -311,7 +312,7 @@ public abstract class IntegrationFlowDefinition<B extends IntegrationFlowDefinit
 
 	public B enrichHeaders(final Map<String, Object> headers,
 			EndpointConfigurer<GenericEndpointSpec<MessageTransformingHandler>> endpointConfigurer) {
-		return this.enrichHeaders(new ComponentConfigurer<HeaderEnricherSpec>() {
+		return enrichHeaders(new ComponentConfigurer<HeaderEnricherSpec>() {
 			@Override
 			public void configure(HeaderEnricherSpec spec) {
 				spec.headers(headers);

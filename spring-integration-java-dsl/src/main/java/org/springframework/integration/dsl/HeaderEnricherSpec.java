@@ -18,6 +18,7 @@ package org.springframework.integration.dsl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -36,6 +37,7 @@ import org.springframework.util.Assert;
 
 /**
  * @author Artem Bilan
+ * @author Gary Russell
  */
 public class HeaderEnricherSpec extends IntegrationComponentSpec<HeaderEnricherSpec, HeaderEnricher> {
 
@@ -72,20 +74,35 @@ public class HeaderEnricherSpec extends IntegrationComponentSpec<HeaderEnricherS
 		return this.messageProcessor(new BeanNameMessageProcessor<Object>(beanName, methodName));
 	}
 
-	public HeaderEnricherSpec headers(MapBuilder<?, String> headers) {
+	public HeaderEnricherSpec headers(MapBuilder<?, String, Object> headers) {
 		return headers(headers.get());
 	}
 
 	public HeaderEnricherSpec headers(Map<String, Object> headers) {
 		Assert.notNull(headers);
-		for (String name : headers.keySet()) {
-			Object value = headers.get(name);
+		for (Entry<String, Object> entry : headers.entrySet()) {
+			String name = entry.getKey();
+			Object value = entry.getValue();
 			if (value instanceof Expression) {
 				header(name, new ExpressionEvaluatingHeaderValueMessageProcessor<Object>((Expression) value, null));
 			}
 			else {
 				header(name, value);
 			}
+		}
+		return this;
+	}
+
+	public HeaderEnricherSpec headerExpressions(MapBuilder<?, String, String> headers) {
+		return headerExpressions(headers.get());
+	}
+
+	public HeaderEnricherSpec headerExpressions(Map<String, String> headers) {
+		Assert.notNull(headers);
+		for (Entry<String, String> entry : headers.entrySet()) {
+			String name = entry.getKey();
+			Expression value = PARSER.parseExpression(entry.getValue());
+			header(name, new ExpressionEvaluatingHeaderValueMessageProcessor<Object>(value, null));
 		}
 		return this;
 	}
