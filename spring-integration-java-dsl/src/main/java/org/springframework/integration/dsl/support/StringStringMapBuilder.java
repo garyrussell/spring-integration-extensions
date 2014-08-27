@@ -23,4 +23,10 @@ package org.springframework.integration.dsl.support;
  */
 public class StringStringMapBuilder extends MapBuilder<StringStringMapBuilder, String, String> {
 
+	public interface StringStringMapBuilderConfigurer {
+
+		void configure(StringStringMapBuilder builder);
+
+	}
+
 }

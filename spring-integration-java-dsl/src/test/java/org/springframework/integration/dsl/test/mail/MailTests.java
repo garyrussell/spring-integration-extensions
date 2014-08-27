@@ -50,7 +50,6 @@ import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.channel.MessageChannels;
 import org.springframework.integration.dsl.mail.Mail;
 import org.springframework.integration.dsl.support.Pollers;
-import org.springframework.integration.dsl.support.StringStringMapBuilder;
 import org.springframework.integration.dsl.test.mail.PoorMansMailServer.ImapServer;
 import org.springframework.integration.dsl.test.mail.PoorMansMailServer.Pop3Server;
 import org.springframework.integration.dsl.test.mail.PoorMansMailServer.SmtpServer;
@@ -213,8 +212,7 @@ public class MailTests {
 									.javaMailProperties(p -> p.put("mail.debug", "true")),
 							e -> e.autoStartup(true)
 									.poller(Pollers.fixedDelay(1000)))
-					.enrichHeaders(s -> s.headerExpressions(new StringStringMapBuilder()
-									.put(MailHeaders.SUBJECT, "payload.subject")
+					.enrichHeaders(s -> s.headerExpressions(c -> c.put(MailHeaders.SUBJECT, "payload.subject")
 									.put(MailHeaders.FROM, "payload.from[0].toString()")))
 					.channel(MessageChannels.queue("pop3Channel"))
 					.get();

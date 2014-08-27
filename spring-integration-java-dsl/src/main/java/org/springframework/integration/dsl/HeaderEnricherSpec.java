@@ -26,6 +26,8 @@ import org.springframework.integration.context.IntegrationContextUtils;
 import org.springframework.integration.dsl.core.IntegrationComponentSpec;
 import org.springframework.integration.dsl.support.BeanNameMessageProcessor;
 import org.springframework.integration.dsl.support.MapBuilder;
+import org.springframework.integration.dsl.support.StringStringMapBuilder;
+import org.springframework.integration.dsl.support.StringStringMapBuilder.StringStringMapBuilderConfigurer;
 import org.springframework.integration.handler.ExpressionEvaluatingMessageProcessor;
 import org.springframework.integration.handler.MessageProcessor;
 import org.springframework.integration.transformer.HeaderEnricher;
@@ -97,12 +99,16 @@ public class HeaderEnricherSpec extends IntegrationComponentSpec<HeaderEnricherS
 		return headerExpressions(headers.get());
 	}
 
+	public HeaderEnricherSpec headerExpressions(StringStringMapBuilderConfigurer configurer) {
+		StringStringMapBuilder builder = new StringStringMapBuilder();
+		configurer.configure(builder);
+		return headerExpressions(builder.get());
+	}
+
 	public HeaderEnricherSpec headerExpressions(Map<String, String> headers) {
 		Assert.notNull(headers);
 		for (Entry<String, String> entry : headers.entrySet()) {
-			String name = entry.getKey();
-			Expression value = PARSER.parseExpression(entry.getValue());
-			header(name, new ExpressionEvaluatingHeaderValueMessageProcessor<Object>(value, null));
+			header(entry.getKey(), new ExpressionEvaluatingHeaderValueMessageProcessor<Object>(entry.getValue(), null));
 		}
 		return this;
 	}
