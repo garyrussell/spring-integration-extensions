@@ -20,6 +20,7 @@ import java.util.Properties;
 
 /**
  * @author Gary Russell
+ * @author Artem Bilan
  *
  */
 public class PropertiesBuilder {
@@ -33,6 +34,12 @@ public class PropertiesBuilder {
 
 	public Properties get() {
 		return this.properties;
+	}
+
+	public interface PropertiesConfigurer {
+
+		void configure(PropertiesBuilder propertiesBuilder);
+
 	}
 
 }

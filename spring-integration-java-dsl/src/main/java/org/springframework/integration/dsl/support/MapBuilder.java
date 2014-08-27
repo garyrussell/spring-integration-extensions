@@ -44,4 +44,10 @@ public class MapBuilder<B extends MapBuilder<B, K, V>, K, V> {
 		return (B) this;
 	}
 
+	public interface MapBuilderConfigurer<B extends MapBuilder<B, K, V>, K, V> {
+
+		void configure(MapBuilder<B, K, V> builder);
+
+	}
+
 }

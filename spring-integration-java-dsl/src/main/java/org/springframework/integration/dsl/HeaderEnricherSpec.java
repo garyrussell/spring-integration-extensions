@@ -26,8 +26,8 @@ import org.springframework.integration.context.IntegrationContextUtils;
 import org.springframework.integration.dsl.core.IntegrationComponentSpec;
 import org.springframework.integration.dsl.support.BeanNameMessageProcessor;
 import org.springframework.integration.dsl.support.MapBuilder;
+import org.springframework.integration.dsl.support.MapBuilder.MapBuilderConfigurer;
 import org.springframework.integration.dsl.support.StringStringMapBuilder;
-import org.springframework.integration.dsl.support.StringStringMapBuilder.StringStringMapBuilderConfigurer;
 import org.springframework.integration.handler.ExpressionEvaluatingMessageProcessor;
 import org.springframework.integration.handler.MessageProcessor;
 import org.springframework.integration.transformer.HeaderEnricher;
@@ -99,7 +99,7 @@ public class HeaderEnricherSpec extends IntegrationComponentSpec<HeaderEnricherS
 		return headerExpressions(headers.get());
 	}
 
-	public HeaderEnricherSpec headerExpressions(StringStringMapBuilderConfigurer configurer) {
+	public HeaderEnricherSpec headerExpressions(MapBuilderConfigurer<StringStringMapBuilder, String, String> configurer) {
 		StringStringMapBuilder builder = new StringStringMapBuilder();
 		configurer.configure(builder);
 		return headerExpressions(builder.get());
