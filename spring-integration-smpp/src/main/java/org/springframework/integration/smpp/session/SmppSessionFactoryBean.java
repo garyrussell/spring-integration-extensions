@@ -1,4 +1,4 @@
-/* Copyright 2002-2013 the original author or authors.
+/* Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,16 @@
  */
 package org.springframework.integration.smpp.session;
 
+import java.io.IOException;
+import java.net.Socket;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jsmpp.DefaultPDUReader;
@@ -25,6 +35,7 @@ import org.jsmpp.bean.TypeOfNumber;
 import org.jsmpp.extra.SessionState;
 import org.jsmpp.session.MessageReceiverListener;
 import org.jsmpp.session.SMPPSession;
+import org.jsmpp.session.Session;
 import org.jsmpp.session.SessionStateListener;
 import org.jsmpp.session.connection.Connection;
 import org.jsmpp.session.connection.ConnectionFactory;
@@ -32,6 +43,7 @@ import org.jsmpp.session.connection.socket.SocketConnection;
 import org.jsmpp.util.DefaultComposer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
@@ -40,15 +52,6 @@ import org.springframework.context.Lifecycle;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.Ordered;
 import org.springframework.util.Assert;
-
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
-import java.io.IOException;
-import java.net.Socket;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Factory bean to create a {@link SMPPSession}. Usually, you need little more than the {@link #host},
@@ -81,6 +84,7 @@ import java.util.concurrent.Executors;
  *
  *
  * @author Josh Long
+ * @author Gary Russell
  * @see org.jsmpp.session.SMPPSession#SMPPSession()
  * @see org.jsmpp.session.SMPPSession#connectAndBind(String, int, org.jsmpp.session.BindParameter)
  * @see org.jsmpp.session.SMPPSession#connectAndBind(String, int, org.jsmpp.bean.BindType, String, String, String, org.jsmpp.bean.TypeOfNumber, org.jsmpp.bean.NumberingPlanIndicator, String, long)
@@ -92,7 +96,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	private Set<MessageReceiverListener> messageReceiverListeners = new HashSet<MessageReceiverListener>();
 	private boolean autoStartup;
 	private volatile boolean running;
-	private Log log = LogFactory.getLog(getClass());
+	private final Log log = LogFactory.getLog(getClass());
 	private SessionStateListener sessionStateListener;
 	private boolean ssl = false;
 	private String host = "127.0.0.1";
@@ -231,8 +235,9 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 					smppSession, new ConnectingLifecycle(smppSession));
 		}
 
-		for (MessageReceiverListener mrl : this.messageReceiverListeners)
+		for (MessageReceiverListener mrl : this.messageReceiverListeners) {
 			extendedSmppSessionAdaptingDelegate.addMessageReceiverListener(mrl);
+		}
 
 		// if session state listener not null, add it
 		if (sessionStateListener != null) {
@@ -250,6 +255,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public boolean isAutoStartup() {
 		return this.autoStartup;
 	}
@@ -266,6 +272,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void start() {
 		log.debug("starting up in " + getClass().getName() + "#start().");
 		if (reconnectingExecutor == null) {
@@ -279,6 +286,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void stop() {
 		log.debug("shutting down in " + getClass().getName() + "#stop().");
 		(  product).stop();
@@ -294,6 +302,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public boolean isRunning() {
 		return this.running;
 	}
@@ -301,6 +310,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public int getPhase() {
 		return Ordered.LOWEST_PRECEDENCE;
 	}
@@ -310,6 +320,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	 * <p/>
 	 * delegates to {@link #buildSmppSession()}
 	 */
+	@Override
 	public ExtendedSmppSession getObject() throws Exception {
 		return product;
 	}
@@ -317,6 +328,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public Class<?> getObjectType() {
 		return ExtendedSmppSessionAdaptingDelegate.class;
 	}
@@ -324,6 +336,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public boolean isSingleton() {
 		return true;
 	}
@@ -358,6 +371,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void afterPropertiesSet() throws Exception {
 
 		// NB, the reference handed back by {@link org.springframework.beans.factory.FactoryBean#getObject()}  isn't itself
@@ -383,6 +397,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 	 */
 	final private static ConnectionFactory sslConnectionFactory = new ConnectionFactory() {
 
+		@Override
 		public Connection createConnection(String host, int port) throws IOException {
 			SocketFactory socketFactory = SSLSocketFactory.getDefault();
 			Socket socket = socketFactory.createSocket(host, port);
@@ -398,16 +413,18 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 
 		private volatile boolean running;
 
-		private SMPPSession session;
+		private final SMPPSession session;
 
 		private ConnectingLifecycle(SMPPSession smppSession) {
 			this.session = smppSession;
 		}
 
+		@Override
 		public boolean isRunning() {
 			return this.running;
 		}
 
+		@Override
 		public void stop() {
 			if (session != null) {
 				if (session.getSessionState().isBound()) {
@@ -422,6 +439,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 			}
 		}
 
+		@Override
 		public void start() {
 			try {
 				session.connectAndBind(host, port, bindType, systemId, password, systemType, addrTon, addrNpi, addressRange, timeout);
@@ -497,7 +515,7 @@ public class SmppSessionFactoryBean implements FactoryBean<ExtendedSmppSession>,
 			log.debug("Registering session close listener");
 			session.addSessionStateListener(new SessionStateListener() {
 				@Override
-				public void onStateChange(SessionState newState, SessionState oldState, Object source) {
+				public void onStateChange(SessionState newState, SessionState oldState, Session source) {
 					// when session is closed but client session has not been destroyed can indicates client
 					// lose connection to server
 					if (newState.equals(SessionState.CLOSED)) {

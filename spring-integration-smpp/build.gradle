@@ -25,7 +25,7 @@ targetCompatibility = 1.6
 
 ext {
 	jacocoVersion = '0.7.0.201403182114'
-	jsmppVersion = '2.1.0'
+	jsmppVersion = '2.2.3'
 	slf4jVersion = '1.7.7'
 	commonsLangVersion = '2.6'
 	commonsBeanUtilsVersion = '1.8.3'
@@ -55,7 +55,7 @@ configurations {
 }
 
 dependencies {
-	compile "com.googlecode.jsmpp:jsmpp:$jsmppVersion"
+	compile "org.jsmpp:jsmpp:$jsmppVersion"
     compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
 	compile "commons-lang:commons-lang:$commonsLangVersion"
 	compile "commons-beanutils:commons-beanutils:$commonsBeanUtilsVersion"

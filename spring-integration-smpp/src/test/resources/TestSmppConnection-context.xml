@@ -45,6 +45,25 @@
 		<property name="autoStartup" value="true" />
 	</bean>
 
+<!-- 	<bean id="session" class="org.springframework.integration.smpp.session.SmppSessionFactoryBean"> -->
+<!-- 		<property name="host" value="localhost" /> -->
+<!-- 		<property name="port" value="11111" /> -->
+<!-- 		<property name="password" value="dfsew" /> -->
+<!-- 		<property name="systemId" value="pavel" /> -->
+<!-- 		<property name="bindType" value="BIND_RX" /> -->
+<!-- 		<property name="autoStartup" value="true" /> -->
+<!-- 		<property name="addressRange" value="${smpp.systemId}" /> -->
+<!-- 	</bean> -->
+
+<!-- 	<bean id="session2" class="org.springframework.integration.smpp.session.SmppSessionFactoryBean"> -->
+<!-- 		<property name="host" value="localhost" /> -->
+<!-- 		<property name="port" value="11111" /> -->
+<!-- 		<property name="password" value="dfsew" /> -->
+<!-- 		<property name="systemId" value="pavel" /> -->
+<!-- 		<property name="bindType" value="BIND_TX" /> -->
+<!-- 		<property name="autoStartup" value="true" /> -->
+<!-- 	</bean> -->
+
 	<int-smpp:inbound-channel-adapter channel="inboundChannel"
 		smpp-session-ref="session" />
 
